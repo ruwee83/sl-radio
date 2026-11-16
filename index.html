@@ -66,11 +66,25 @@ header h1{font-size:20px;font-weight:700}
 .btn-danger{background:var(--danger);color:#fff}
 .toast{position:fixed;top:calc(env(safe-area-inset-top) + 20px);left:50%;transform:translateX(-50%) translateY(-100px);background:var(--card2);color:var(--text);padding:12px 20px;border-radius:12px;font-size:14px;z-index:200;transition:transform .3s;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;line-height:1.6}
+.hbtn{margin-left:auto;padding:8px 14px;border-radius:20px;border:none;background:var(--card);color:var(--text);font-size:13px;cursor:pointer}
+#omodal{z-index:45}
+#omodal .modal-content{max-height:88vh;overflow-y:auto;padding-bottom:calc(env(safe-area-inset-bottom) + 140px)}
+.srow{display:flex;gap:8px;margin-bottom:10px}
+.srow .search{flex:1;min-width:0}
+.srow button{padding:0 16px;border-radius:14px;border:none;background:var(--accent);color:#000;font-weight:600;font-size:14px;cursor:pointer}
+.sw{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:4px 0 12px}
+.sw input{width:18px;height:18px;accent-color:var(--accent)}
+.orow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--bg);margin-bottom:8px;border:2px solid transparent}
+.orow.playing{border-color:var(--accent)}
+.obtn{padding:8px 12px;border-radius:10px;border:none;background:var(--card2);color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0}
+.obtn.add{background:var(--accent);color:#000;font-weight:600}
+.obtn.done{opacity:.5}
+.ohint{font-size:12px;color:var(--muted);margin-bottom:10px}
 </style>
 </head>
 <body>
-<header><div class="logo">📻</div><h1>SL Radio</h1></header>
+<header><div class="logo">📻</div><h1>SL Radio</h1><button class="hbtn" id="onlineBtn">🌐 සොයන්න</button></header>
 <div class="search-wrap"><input class="search" id="search" placeholder="🔍 නාලිකා සොයන්න"></div>
 <div class="tabs" id="tabs"></div>
 <div class="list" id="list"></div>
@@ -110,6 +124,19 @@ header h1{font-size:20px;font-weight:700}
       <button class="btn-danger" id="deleteBtn" style="display:none">Delete</button>
       <button class="btn-primary" id="saveBtn">Save</button>
     </div>
+  </div>
+</div>
+<div class="modal" id="omodal">
+  <div class="modal-content">
+    <h3>🌐 Online නාලිකා සොයන්න</h3>
+    <div class="srow">
+      <input class="search" id="oQuery" placeholder="නම (හිස්ව තැබිය හැක)">
+      <button id="oGo">සොයන්න</button>
+    </div>
+    <label class="sw"><input type="checkbox" id="oLow"> 📉 අඩු data (≤ 64 kbps පමණක්)</label>
+    <div class="ohint">HTTPS streams පමණක්. ▶ එබුවාම ඇහෙනවා, "＋" එබුවාම list එකට එකතු වෙනවා.</div>
+    <div id="oList"><div class="empty">"සොයන්න" එබුවාම ලංකාවේ stations පෙන්වයි</div></div>
+    <div class="actions"><button class="btn-secondary" id="oClose">වසන්න</button></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -194,6 +221,7 @@ function renderList(){
 }
 
 function toggleFav(id){
+  if(id==='tmp_preview'){toast('මුලින් list එකට එකතු කරන්න (＋)');return}
   if(favs.includes(id)) favs = favs.filter(x=>x!==id); else favs.push(id);
   save(K_FAV, favs); renderList();
   if(current && current.id===id) $('pStar').textContent = favs.includes(id)?'★':'☆';
@@ -355,6 +383,113 @@ $('deleteBtn').onclick = ()=>{
   if(current && current.id===editingId) stopAll();
   $('modal').classList.remove('show'); renderList(); toast('🗑️ ඉවත් කරන ලදී');
 };
+
+// ===== Online search (Radio Browser) =====
+const K_CACHE = 'slradio_cache_v1', K_LOW = 'slradio_low';
+const CACHE_TTL = 6*3600*1000;
+const API_HOSTS = ['https://de1.api.radio-browser.info','https://fi1.api.radio-browser.info','https://nl1.api.radio-browser.info'];
+let onlineResults = [], shown = [];
+
+function guessGenre(lang){
+  const l=(lang||'').toLowerCase();
+  if(l.includes('sinhal')) return 'Sinhala';
+  if(l.includes('tamil')) return 'Tamil';
+  if(l.includes('english')) return 'English';
+  return 'Mixed';
+}
+
+async function fetchStations(q){
+  const key = 'q:'+q.toLowerCase();
+  const cache = load(K_CACHE, {});
+  const hit = cache[key];
+  if(hit && Date.now()-hit.t < CACHE_TTL) return {list:hit.d, cached:true};
+  const params = 'countrycode=LK&hidebroken=true&is_https=true&order=clickcount&reverse=true&limit=100' + (q?'&name='+encodeURIComponent(q):'');
+  let lastErr;
+  for(const h of API_HOSTS){
+    try{
+      const ctl = new AbortController();
+      const to = setTimeout(()=>ctl.abort(), 8000);
+      const r = await fetch(h+'/json/stations/search?'+params, {signal:ctl.signal});
+      clearTimeout(to);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const raw = await r.json();
+      const seen = new Set();
+      const out = raw.map(s=>({
+        name:(s.name||'').trim(), url:s.url_resolved||s.url,
+        bitrate:parseInt(s.bitrate)||0, codec:s.codec||'', lang:s.language||''
+      })).filter(s=>s.name && /^https:\/\//i.test(s.url) && !seen.has(s.url) && seen.add(s.url));
+      cache[key] = {t:Date.now(), d:out};
+      const keys = Object.keys(cache);
+      if(keys.length>10) delete cache[keys[0]];
+      save(K_CACHE, cache);
+      return {list:out, cached:false};
+    }catch(e){ lastErr = e }
+  }
+  throw lastErr || new Error('fail');
+}
+
+function renderOnline(){
+  const low = $('oLow').checked;
+  let list = onlineResults.slice();
+  if(low) list = list.filter(s=>s.bitrate>0 && s.bitrate<=64).sort((a,b)=>a.bitrate-b.bitrate);
+  shown = list;
+  const box = $('oList');
+  if(!list.length){
+    box.innerHTML = (low && onlineResults.length)
+      ? '<div class="empty">64 kbps හෝ ඊට අඩු stations නැහැ.<br>"අඩු data" switch එක off කරන්න.</div>'
+      : '<div class="empty">ප්‍රතිඵල නැහැ</div>';
+    return;
+  }
+  box.innerHTML = list.map((s,i)=>{
+    const added = stations.some(x=>x.url===s.url);
+    const playingNow = current && current.url===s.url;
+    const br = s.bitrate ? `${s.bitrate} kbps · ≈${Math.max(1,Math.round(s.bitrate*0.45))} MB/පැය` : 'bitrate නොදනී';
+    return `<div class="orow ${playingNow?'playing':''}">
+      <div class="info"><div class="name">${esc(s.name)}</div><div class="meta">${br}${s.codec?' · '+esc(s.codec):''}</div></div>
+      <button class="obtn" data-p="${i}">${playingNow&&playing?'❚❚':'▶'}</button>
+      <button class="obtn add ${added?'done':''}" data-a="${i}">${added?'✓':'＋'}</button>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>previewOnline(shown[+b.dataset.p]));
+  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>addOnline(shown[+b.dataset.a]));
+}
+
+function previewOnline(s){
+  if(!s) return;
+  if(current && current.url===s.url && playing){ audio.pause(); return }
+  playStation({id:'tmp_preview', name:s.name, url:s.url, emoji:'📻', genre:guessGenre(s.lang), freq:''});
+  renderOnline();
+}
+
+function addOnline(s){
+  if(!s) return;
+  if(stations.some(x=>x.url===s.url)){toast('දැනටමත් list එකේ තිබේ');return}
+  const st = {id:'u_'+Date.now(), name:s.name, url:s.url, freq:'', emoji:'📻', genre:guessGenre(s.lang)};
+  stations.push(st); save(K_ST, stations);
+  if(current && current.url===st.url){ current = st; $('pStar').textContent = favs.includes(st.id)?'★':'☆' }
+  renderList(); renderOnline(); toast('✅ එකතු කරන ලදී');
+}
+
+async function doSearch(){
+  const q = $('oQuery').value.trim();
+  $('oList').innerHTML = '<div class="empty">සොයමින්...</div>';
+  try{
+    const {list, cached} = await fetchStations(q);
+    onlineResults = list; renderOnline();
+    if(cached) toast('📦 සුරකින ලද ප්‍රතිඵල (data නොයයි)');
+  }catch(e){
+    $('oList').innerHTML = '<div class="empty">සම්බන්ධ විය නොහැක.<br>Internet පරීක්ෂා කර නැවත උත්සාහ කරන්න.</div>';
+  }
+}
+
+$('onlineBtn').onclick = ()=>{ $('omodal').classList.add('show'); if(!onlineResults.length) doSearch() };
+$('oClose').onclick = ()=>$('omodal').classList.remove('show');
+$('omodal').onclick = e=>{ if(e.target===$('omodal')) $('omodal').classList.remove('show') };
+$('oGo').onclick = doSearch;
+$('oQuery').onkeydown = e=>{ if(e.key==='Enter') doSearch() };
+$('oLow').checked = load(K_LOW, false);
+$('oLow').onchange = ()=>{ save(K_LOW, $('oLow').checked); renderOnline() };
+['playing','pause'].forEach(ev=>audio.addEventListener(ev, ()=>{ if($('omodal').classList.contains('show') && onlineResults.length) renderOnline() }));
 
 // Init
 renderTabs(); renderList();
