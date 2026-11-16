@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SL Radio">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SL Radio</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#0b1020;--card:#1a2238;--card2:#232f4b;--accent:#f59e0b;--accent2:#8b5cf6;--text:#f1f5f9;--muted:#94a3b8;--danger:#ef4444;--success:#10b981}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Sinhala",sans-serif;background:linear-gradient(160deg,#0b1020,#1e1b4b) fixed;color:var(--text);min-height:100vh;padding-bottom:170px;overflow-x:hidden}
+header{padding:calc(env(safe-area-inset-top) + 16px) 20px 8px;display:flex;align-items:center;gap:10px}
+header h1{font-size:20px;font-weight:700}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:18px}
+.search-wrap{padding:12px 20px}
+.search{width:100%;padding:12px 16px;border-radius:14px;border:none;background:var(--card);color:var(--text);font-size:15px;outline:none}
+.search::placeholder{color:var(--muted)}
+.tabs{display:flex;gap:8px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:8px 14px;border-radius:20px;background:var(--card);color:var(--muted);border:none;font-size:13px;cursor:pointer}
+.tab.active{background:var(--accent);color:#000;font-weight:600}
+.list{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.station{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:var(--card);cursor:pointer;border:2px solid transparent;transition:.2s}
+.station:active{transform:scale(.98)}
+.station.playing{border-color:var(--accent);background:var(--card2)}
+.icon{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#334155,#1e293b);display:grid;place-items:center;font-size:22px}
+.station.playing .icon{background:linear-gradient(135deg,var(--accent),var(--accent2));animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}
+.info{flex:1;min-width:0}
+.name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:12px;color:var(--muted);margin-top:2px}
+.meta .warn{color:var(--accent)}
+.star,.menu{font-size:18px;padding:6px;background:none;border:none;color:var(--muted);cursor:pointer}
+.star.on{color:var(--accent)}
+.player{position:fixed;left:0;right:0;bottom:0;background:rgba(26,34,56,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);padding:12px 16px calc(env(safe-area-inset-bottom) + 12px);transform:translateY(100%);transition:transform .3s;z-index:50}
+.player.show{transform:translateY(0)}
+.row1{display:flex;align-items:center;gap:12px}
+.icon-big{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.btn{width:44px;height:44px;border-radius:50%;border:none;background:var(--accent);color:#000;font-size:18px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.btn.small{width:36px;height:36px;background:var(--card2);color:var(--text);font-size:16px}
+.row2{display:flex;align-items:center;gap:10px;margin-top:10px}
+.timer-btn{flex:1;padding:8px;border-radius:10px;border:none;background:var(--card2);color:var(--text);font-size:13px;cursor:pointer}
+.timer-btn.active{background:var(--accent);color:#000;font-weight:600}
+.vol{width:70px;accent-color:var(--accent)}
+.fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 160px);width:56px;height:56px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 24px rgba(245,158,11,.4);z-index:40}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.modal.show{display:flex}
+.modal-content{width:100%;max-width:500px;background:var(--card);border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom) + 20px);animation:slideUp .3s}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-size:17px;margin-bottom:16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.field input,.field select{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:var(--bg);color:var(--text);font-size:14px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.actions{display:flex;gap:10px;margin-top:16px}
+.actions button{flex:1;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);color:#000}
+.btn-secondary{background:var(--card2);color:var(--text)}
+.btn-danger{background:var(--danger);color:#fff}
+.toast{position:fixed;top:calc(env(safe-area-inset-top) + 20px);left:50%;transform:translateX(-50%) translateY(-100px);background:var(--card2);color:var(--text);padding:12px 20px;border-radius:12px;font-size:14px;z-index:200;transition:transform .3s;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header><div class="logo">📻</div><h1>SL Radio</h1></header>
+<div class="search-wrap"><input class="search" id="search" placeholder="🔍 නාලිකා සොයන්න"></div>
+<div class="tabs" id="tabs"></div>
+<div class="list" id="list"></div>
+<button class="fab" id="fab" aria-label="Add station">＋</button>
+
+<div class="player" id="player">
+  <div class="row1">
+    <div class="icon-big" id="pIcon">📻</div>
+    <div class="info"><div class="name" id="pName">—</div><div class="meta" id="pStatus">නවත්වා ඇත</div></div>
+    <button class="btn small" id="pStar">☆</button>
+    <button class="btn" id="pPlay">▶</button>
+  </div>
+  <div class="row2">
+    <button class="timer-btn" id="timerBtn">⏰ Sleep: Off</button>
+    <button class="btn small" id="pClose">✕</button>
+    <input type="range" class="vol" id="vol" min="0" max="100" value="80">
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">නාලිකාවක් එකතු කරන්න</h3>
+    <div class="field"><label>නම</label><input id="fName" placeholder="Hiru FM"></div>
+    <div class="field"><label>සංඛ්‍යාතය (optional)</label><input id="fFreq" placeholder="96.1"></div>
+    <div class="field"><label>Stream URL</label><input id="fUrl" placeholder="https://..."></div>
+    <div class="field"><label>භාෂාව</label>
+      <select id="fGenre">
+        <option value="Sinhala">සිංහල</option>
+        <option value="Tamil">தமிழ்</option>
+        <option value="English">English</option>
+        <option value="Mixed">Mixed</option>
+      </select>
+    </div>
+    <div class="field"><label>Emoji (optional)</label><input id="fEmoji" placeholder="📻" maxlength="2"></div>
+    <div class="actions">
+      <button class="btn-secondary" id="cancelBtn">අවලංගු</button>
+      <button class="btn-danger" id="deleteBtn" style="display:none">Delete</button>
+      <button class="btn-primary" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<audio id="audio" preload="none"></audio>
+
+<script>
+const $ = id => document.getElementById(id);
+const K_ST = 'slradio_st_v2', K_FAV = 'slradio_fav_v1', K_VER = 'slradio_ver';
+const OLD_K_ST = 'slradio_st_v1';
+// DEFAULT_STATIONS වෙනස් කළොත් මේ අංකය වැඩි කරන්න — අලුත් stations පරණ users ට එකතු වේ
+const DATA_VER = 2;
+
+const DEFAULT_STATIONS = [
+  {id:'hiru',   name:'Hiru FM',    freq:'96.1', emoji:'🎵', genre:'Sinhala', url:'https://radio.lotustechnologieslk.net:2020/stream/hirufmgalle'},
+  {id:'sirasa', name:'Sirasa FM',  freq:'106.5', emoji:'🎤', genre:'Sinhala', url:'http://live.trusl.com:1170/;'},
+  {id:'shaa',   name:'Shaa FM',    freq:'90.9', emoji:'🌟', genre:'Sinhala', url:'https://radio.lotustechnologieslk.net:8026/stream'},
+  {id:'neth',   name:'Neth FM',    freq:'94.8', emoji:'🎧', genre:'Sinhala', url:'https://cp11.serverse.com/proxy/nethfm/stream'},
+  {id:'gold',   name:'Gold FM',    freq:'92.2', emoji:'🎸', genre:'English', url:'https://radio.lotustechnologieslk.net:2010/stream/goldfmgalle'},
+  {id:'sooriyan',name:'Sooriyan FM',freq:'103.4',emoji:'🌺', genre:'Tamil',   url:'https://radio.lotustechnologieslk.net:8006/stream'},
+  {id:'fox',    name:'FOX 91.4',   freq:'91.4', emoji:'🦊', genre:'Mixed',   url:'http://142.132.250.174:7673/stream'},
+  {id:'city',   name:'City FM',    freq:'89.6', emoji:'🏙️', genre:'Mixed',   url:'http://220.247.227.20:8000/citystream'},
+  {id:'rhythm', name:'Rhythm FM',  freq:'107.3',emoji:'🎶', genre:'Sinhala', url:'http://209.133.216.3:7148/stream'},
+];
+
+function load(k, d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch{return d}}
+function save(k, v){try{localStorage.setItem(k, JSON.stringify(v))}catch{}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+// stations load + migrate
+let stations = load(K_ST, null);
+if(!stations){
+  stations = load(OLD_K_ST, null) || DEFAULT_STATIONS.map(s=>({...s}));
+}
+if(load(K_VER, 0) < DATA_VER){
+  DEFAULT_STATIONS.forEach(d=>{ if(!stations.some(s=>s.id===d.id)) stations.push({...d}) });
+  save(K_ST, stations); save(K_VER, DATA_VER);
+}
+let favs = load(K_FAV, ['hiru']);
+let current = null, playing = false, baseVolume = 0.8;
+let sleepMin = 0, sleepTO = null, fadeIV = null;
+let filter = 'all', query = '';
+
+const audio = $('audio');
+
+function isMixed(url){return location.protocol==='https:' && /^http:\/\//i.test(url)}
+function toast(msg, ms=3000){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)}
+
+function renderTabs(){
+  const genres = ['all','Sinhala','Tamil','English','Mixed','fav'];
+  const labels = {all:'🌐 All',Sinhala:'සිංහල',Tamil:'தமிழ்',English:'English',Mixed:'Mixed',fav:'⭐ Favorites'};
+  $('tabs').innerHTML = genres.map(g=>`<button class="tab ${filter===g?'active':''}" data-g="${g}">${labels[g]}</button>`).join('');
+  $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{filter=b.dataset.g;renderTabs();renderList()});
+}
+
+function filtered(){
+  return stations.filter(s=>{
+    if(filter==='fav' && !favs.includes(s.id)) return false;
+    if(filter!=='all' && filter!=='fav' && s.genre!==filter) return false;
+    if(query){const q=query.toLowerCase();if(!s.name.toLowerCase().includes(q)&&!(s.freq||'').includes(q))return false}
+    return true;
+  });
+}
+
+function renderList(){
+  const list = filtered();
+  if(!list.length){$('list').innerHTML='<div class="empty">නාලිකා හමු නොවිණි</div>';return}
+  $('list').innerHTML = list.map(s=>`
+    <div class="station ${current&&current.id===s.id?'playing':''}" data-id="${esc(s.id)}">
+      <div class="icon">${esc(s.emoji||'📻')}</div>
+      <div class="info"><div class="name">${esc(s.name)}</div><div class="meta">${s.freq?esc(s.freq)+' FM · ':''}${esc(s.genre||'')}${isMixed(s.url)?' · <span class="warn">⚠ HTTP</span>':''}</div></div>
+      <button class="star ${favs.includes(s.id)?'on':''}" data-fav="${esc(s.id)}" aria-label="Favorite">${favs.includes(s.id)?'★':'☆'}</button>
+      <button class="menu" data-edit="${esc(s.id)}" aria-label="Edit">✎</button>
+    </div>`).join('');
+  $('list').querySelectorAll('.station').forEach(el=>{
+    el.onclick = e=>{
+      if(e.target.closest('[data-fav]')||e.target.closest('[data-edit]')) return;
+      playStation(stations.find(x=>x.id===el.dataset.id));
+    };
+  });
+  $('list').querySelectorAll('[data-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();toggleFav(b.dataset.fav)});
+  $('list').querySelectorAll('[data-edit]').forEach(b=>b.onclick=e=>{e.stopPropagation();openEdit(b.dataset.edit)});
+}
+
+function toggleFav(id){
+  if(favs.includes(id)) favs = favs.filter(x=>x!==id); else favs.push(id);
+  save(K_FAV, favs); renderList();
+  if(current && current.id===id) $('pStar').textContent = favs.includes(id)?'★':'☆';
+}
+
+function playStation(s){
+  if(!s) return;
+  if(!s.url){toast('⚠️ Stream URL නැත');return}
+  if(isMixed(s.url)) toast('⚠️ HTTP stream — HTTPS site එකේ වැඩ නොකරන්න පුළුවන්',4000);
+  if(fadeIV){clearInterval(fadeIV);fadeIV=null}
+  current = s;
+  audio.pause();
+  audio.src = s.url;
+  audio.volume = baseVolume;
+  $('pStatus').textContent = 'සම්බන්ධ වෙමින්...';
+  audio.play().catch(err=>{
+    console.warn(err);
+    if(isMixed(s.url)) toast('❌ Stream විවෘත නොවේ. URL එක HTTPS එකකට වෙනස් කරන්න (✎)');
+    else toast('❌ නාලිකාව විවෘත නොවේ');
+    $('pStatus').textContent = 'නවත්වා ඇත';
+    playing = false; updateUI();
+  });
+  $('player').classList.add('show');
+  $('pName').textContent = s.name;
+  $('pIcon').textContent = s.emoji || '📻';
+  $('pStar').textContent = favs.includes(s.id)?'★':'☆';
+  renderList();
+  updateMediaSession(s);
+}
+
+function updateUI(){
+  $('pPlay').textContent = playing ? '❚❚' : '▶';
+  if(playing) $('pStatus').textContent = '🎵 සජීවී';
+}
+
+audio.addEventListener('playing', ()=>{playing=true;updateUI()});
+audio.addEventListener('pause', ()=>{playing=false;if(!fadeIV) $('pStatus').textContent='නවත්වා ඇත';updateUI()});
+audio.addEventListener('waiting', ()=>{if(current) $('pStatus').textContent='සම්බන්ධ වෙමින්...'});
+audio.addEventListener('error', ()=>{
+  if(!current) return;
+  playing=false;updateUI();
+  $('pStatus').textContent='දෝෂයකි';
+  toast('⚠️ සංඥාව නැත — වෙනත් එකක් උත්සාහ කරන්න');
+});
+
+function updateMediaSession(s){
+  if(!('mediaSession' in navigator)) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: s.name, artist: 'SL Radio', album: s.freq? s.freq+' FM' : 'Live',
+      artwork: [
+        {src:'icon-192.png', sizes:'192x192', type:'image/png'},
+        {src:'icon-512.png', sizes:'512x512', type:'image/png'}
+      ]
+    });
+    navigator.mediaSession.setActionHandler('play', ()=>audio.play());
+    navigator.mediaSession.setActionHandler('pause', ()=>audio.pause());
+    navigator.mediaSession.setActionHandler('stop', ()=>stopAll());
+  }catch(e){}
+}
+
+function stopAll(){
+  if(fadeIV){clearInterval(fadeIV);fadeIV=null}
+  audio.pause();
+  current=null;playing=false;
+  audio.removeAttribute('src'); audio.load();
+  audio.volume = baseVolume;
+  $('player').classList.remove('show');
+  renderList();
+}
+
+function resetSleepUI(){$('timerBtn').textContent='⏰ Sleep: Off';$('timerBtn').classList.remove('active')}
+
+function setSleep(min){
+  if(sleepTO){clearTimeout(sleepTO);sleepTO=null}
+  if(fadeIV){clearInterval(fadeIV);fadeIV=null}
+  audio.volume = baseVolume;
+  sleepMin = min;
+  if(min===0){resetSleepUI();return}
+  $('timerBtn').textContent = `⏰ Sleep: ${min}m`;
+  $('timerBtn').classList.add('active');
+  sleepTO = setTimeout(()=>{
+    sleepTO = null;
+    const startVol = audio.volume, t0 = Date.now();
+    fadeIV = setInterval(()=>{
+      const p = (Date.now()-t0)/30000;
+      const v = startVol*(1-p);
+      if(v<=0){
+        clearInterval(fadeIV);fadeIV=null;
+        audio.pause();audio.volume=baseVolume;
+        sleepMin = 0; resetSleepUI();
+        toast('😴 රේඩියෝ නතර කරන ලදී');
+      } else { audio.volume = v; }
+    }, 200);
+  }, min*60*1000);
+}
+
+const SLEEP_STEPS = [0,15,30,45,60,90];
+$('timerBtn').onclick = ()=>{
+  const i = SLEEP_STEPS.indexOf(sleepMin);
+  setSleep(SLEEP_STEPS[(i+1)%SLEEP_STEPS.length]);
+};
+
+$('pPlay').onclick = ()=>{
+  if(!current) return;
+  if(playing) audio.pause();
+  else {
+    if(!audio.getAttribute('src')) audio.src = current.url;
+    audio.play().catch(()=>toast('❌ විවෘත නොවේ'));
+  }
+};
+$('pClose').onclick = stopAll;
+$('pStar').onclick = ()=>{ if(current) toggleFav(current.id) };
+
+$('vol').oninput = e=>{baseVolume = e.target.value/100; if(!fadeIV) audio.volume = baseVolume};
+$('search').oninput = e=>{query = e.target.value.trim(); renderList()};
+
+// Add / Edit modal
+let editingId = null;
+function openAdd(){
+  editingId=null;$('modalTitle').textContent='නාලිකාවක් එකතු කරන්න';
+  $('fName').value='';$('fFreq').value='';$('fUrl').value='';$('fEmoji').value='';$('fGenre').value='Sinhala';
+  $('deleteBtn').style.display='none';$('modal').classList.add('show');
+}
+function openEdit(id){
+  const s=stations.find(x=>x.id===id);if(!s)return;
+  editingId=id;$('modalTitle').textContent='නාලිකාව සංස්කරණය';
+  $('fName').value=s.name;$('fFreq').value=s.freq||'';$('fUrl').value=s.url;$('fEmoji').value=s.emoji||'';$('fGenre').value=s.genre||'Sinhala';
+  $('deleteBtn').style.display='block';$('modal').classList.add('show');
+}
+$('fab').onclick = openAdd;
+$('cancelBtn').onclick = ()=>$('modal').classList.remove('show');
+$('modal').onclick = e=>{ if(e.target===$('modal')) $('modal').classList.remove('show') };
+$('saveBtn').onclick = ()=>{
+  const name = $('fName').value.trim();
+  const url = $('fUrl').value.trim();
+  if(!name || !url){toast('නම සහ URL අවශ්‍යයි');return}
+  if(!/^https?:\/\//i.test(url)){toast('URL එක http:// හෝ https:// වලින් පටන් ගන්න ඕනේ');return}
+  const obj = {name, url, freq:$('fFreq').value.trim(), emoji:$('fEmoji').value.trim()||'📻', genre:$('fGenre').value};
+  if(editingId){
+    const i = stations.findIndex(x=>x.id===editingId);
+    stations[i] = {...stations[i], ...obj};
+    if(current && current.id===editingId){
+      const urlChanged = current.url !== stations[i].url;
+      current = stations[i];
+      $('pName').textContent=current.name;$('pIcon').textContent=current.emoji;
+      if(urlChanged) playStation(current);
+    }
+  } else {
+    obj.id = 'u_'+Date.now(); stations.push(obj);
+  }
+  save(K_ST, stations); $('modal').classList.remove('show'); renderList(); toast('✅ සුරකින ලදී');
+};
+$('deleteBtn').onclick = ()=>{
+  if(!editingId) return;
+  stations = stations.filter(x=>x.id!==editingId);
+  favs = favs.filter(x=>x!==editingId);
+  save(K_ST, stations); save(K_FAV, favs);
+  if(current && current.id===editingId) stopAll();
+  $('modal').classList.remove('show'); renderList(); toast('🗑️ ඉවත් කරන ලදී');
+};
+
+// Init
+renderTabs(); renderList();
+
+// PWA service worker
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
