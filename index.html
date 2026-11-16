@@ -19,9 +19,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans S
 header{padding:calc(env(safe-area-inset-top) + 16px) 20px 8px;display:flex;align-items:center;gap:10px}
 header h1{font-size:20px;font-weight:700}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:18px}
-.search-wrap{padding:12px 20px}
-.search{width:100%;padding:12px 16px;border-radius:14px;border:none;background:var(--card);color:var(--text);font-size:15px;outline:none}
+.search-wrap{padding:12px 20px;display:flex;gap:8px;align-items:center}
+.search{flex:1;min-width:0;width:100%;padding:12px 16px;border-radius:14px;border:none;background:var(--card);color:var(--text);font-size:15px;outline:none}
 .search::placeholder{color:var(--muted)}
+.sbtn{flex-shrink:0;height:44px;min-width:44px;padding:0 12px;border-radius:14px;border:none;background:var(--card);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
 .tabs{display:flex;gap:8px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:8px 14px;border-radius:20px;background:var(--card);color:var(--muted);border:none;font-size:13px;cursor:pointer}
@@ -80,12 +81,26 @@ header h1{font-size:20px;font-weight:700}
 .obtn{padding:8px 12px;border-radius:10px;border:none;background:var(--card2);color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0}
 .obtn.add{background:var(--accent);color:#000;font-weight:600}
 .obtn.done{opacity:.5}
-.ohint{font-size:12px;color:var(--muted);margin-bottom:10px}
+.ohint{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.dsum{display:flex;gap:8px;margin-bottom:14px}
+.dbox{flex:1;background:var(--bg);border-radius:12px;padding:10px 6px;text-align:center}
+.dbox b{display:block;font-size:16px}
+.dbox span{font-size:11px;color:var(--muted)}
+.drow{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.dl{width:48px;color:var(--muted);flex-shrink:0}
+.dbar{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.dbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px}
+.dv{width:64px;text-align:right;flex-shrink:0}
+#dmodal .ohint{margin-top:12px}
 </style>
 </head>
 <body>
-<header><div class="logo">📻</div><h1>SL Radio</h1><button class="hbtn" id="onlineBtn">🌐 සොයන්න</button></header>
-<div class="search-wrap"><input class="search" id="search" placeholder="🔍 නාලිකා සොයන්න"></div>
+<header><div class="logo">📻</div><h1>SL Radio</h1><button class="hbtn" id="onlineBtn" data-i18n="onlineBtn">🌐 සොයන්න</button></header>
+<div class="search-wrap">
+  <input class="search" id="search" data-i18n-ph="searchPh" placeholder="🔍 නාලිකා සොයන්න">
+  <button class="sbtn" id="dataBtn" aria-label="Data usage">📊</button>
+  <button class="sbtn" id="langBtn" aria-label="Language">EN</button>
+</div>
 <div class="tabs" id="tabs"></div>
 <div class="list" id="list"></div>
 <button class="fab" id="fab" aria-label="Add station">＋</button>
@@ -107,38 +122,54 @@ header h1{font-size:20px;font-weight:700}
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3 id="modalTitle">නාලිකාවක් එකතු කරන්න</h3>
-    <div class="field"><label>නම</label><input id="fName" placeholder="Hiru FM"></div>
-    <div class="field"><label>සංඛ්‍යාතය (optional)</label><input id="fFreq" placeholder="96.1"></div>
-    <div class="field"><label>Stream URL</label><input id="fUrl" placeholder="https://..."></div>
-    <div class="field"><label>භාෂාව</label>
+    <div class="field"><label data-i18n="lName">නම</label><input id="fName" placeholder="Hiru FM"></div>
+    <div class="field"><label data-i18n="lFreq">සංඛ්‍යාතය (optional)</label><input id="fFreq" placeholder="96.1"></div>
+    <div class="field"><label data-i18n="lUrl">Stream URL</label><input id="fUrl" placeholder="https://..."></div>
+    <div class="field"><label data-i18n="lGenre">භාෂාව</label>
       <select id="fGenre">
-        <option value="Sinhala">සිංහල</option>
-        <option value="Tamil">தமிழ்</option>
-        <option value="English">English</option>
-        <option value="Mixed">Mixed</option>
+        <option value="Sinhala" data-i18n="oSi">සිංහල</option>
+        <option value="Tamil" data-i18n="oTa">தமிழ்</option>
+        <option value="English" data-i18n="oEn">English</option>
+        <option value="Mixed" data-i18n="oMx">මිශ්‍ර</option>
       </select>
     </div>
-    <div class="field"><label>Emoji (optional)</label><input id="fEmoji" placeholder="📻" maxlength="2"></div>
+    <div class="field"><label data-i18n="lBitrate">Bitrate kbps (optional)</label><input id="fBitrate" type="number" inputmode="numeric" min="0" max="512" placeholder="64"></div>
+    <div class="field"><label data-i18n="lEmoji">Emoji (optional)</label><input id="fEmoji" placeholder="📻" maxlength="2"></div>
     <div class="actions">
-      <button class="btn-secondary" id="cancelBtn">අවලංගු</button>
-      <button class="btn-danger" id="deleteBtn" style="display:none">Delete</button>
-      <button class="btn-primary" id="saveBtn">Save</button>
+      <button class="btn-secondary" id="cancelBtn" data-i18n="cancel">අවලංගු</button>
+      <button class="btn-danger" id="deleteBtn" data-i18n="del" style="display:none">මකන්න</button>
+      <button class="btn-primary" id="saveBtn" data-i18n="save">සුරකින්න</button>
     </div>
   </div>
 </div>
+
 <div class="modal" id="omodal">
   <div class="modal-content">
-    <h3>🌐 Online නාලිකා සොයන්න</h3>
+    <h3 data-i18n="oTitle">🌐 Online නාලිකා සොයන්න</h3>
     <div class="srow">
-      <input class="search" id="oQuery" placeholder="නම (හිස්ව තැබිය හැක)">
-      <button id="oGo">සොයන්න</button>
+      <input class="search" id="oQuery" data-i18n-ph="oPh" placeholder="නම (හිස්ව තැබිය හැක)">
+      <button id="oGo" data-i18n="oGo">සොයන්න</button>
     </div>
-    <label class="sw"><input type="checkbox" id="oLow"> 📉 අඩු data (≤ 64 kbps පමණක්)</label>
-    <div class="ohint">HTTPS streams පමණක්. ▶ එබුවාම ඇහෙනවා, "＋" එබුවාම list එකට එකතු වෙනවා.</div>
-    <div id="oList"><div class="empty">"සොයන්න" එබුවාම ලංකාවේ stations පෙන්වයි</div></div>
-    <div class="actions"><button class="btn-secondary" id="oClose">වසන්න</button></div>
+    <label class="sw"><input type="checkbox" id="oLow"> <span data-i18n="oLow">📉 අඩු data (≤ 64 kbps පමණක්)</span></label>
+    <div class="ohint" data-i18n="oHint">HTTPS streams පමණක්. ▶ එබුවාම ඇහෙනවා, ＋ එබුවාම list එකට එකතු වෙනවා.</div>
+    <div id="oList"><div class="empty" data-i18n="oInit">"සොයන්න" එබුවාම ලංකාවේ stations පෙන්වයි</div></div>
+    <div class="actions"><button class="btn-secondary" id="oClose" data-i18n="close">වසන්න</button></div>
   </div>
 </div>
+
+<div class="modal" id="dmodal">
+  <div class="modal-content">
+    <h3 data-i18n="dTitle">📊 Data භාවිතය</h3>
+    <div class="dsum" id="dSum"></div>
+    <div id="dBars"></div>
+    <div class="ohint" data-i18n="dNote">ආසන්න අගයක් පමණයි.</div>
+    <div class="actions">
+      <button class="btn-danger" id="dReset" data-i18n="dReset">මකන්න</button>
+      <button class="btn-secondary" id="dClose" data-i18n="close">වසන්න</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <audio id="audio" preload="none"></audio>
 
@@ -146,8 +177,94 @@ header h1{font-size:20px;font-weight:700}
 const $ = id => document.getElementById(id);
 const K_ST = 'slradio_st_v2', K_FAV = 'slradio_fav_v1', K_VER = 'slradio_ver';
 const OLD_K_ST = 'slradio_st_v1';
+const K_CACHE = 'slradio_cache_v1', K_LOW = 'slradio_low';
+const K_LANG = 'slradio_lang', K_DATA = 'slradio_data_v1';
 // DEFAULT_STATIONS වෙනස් කළොත් මේ අංකය වැඩි කරන්න — අලුත් stations පරණ users ට එකතු වේ
 const DATA_VER = 2;
+
+// ===== Languages (සිංහල / English) =====
+const I18N = {
+  si: {
+    searchPh:'🔍 නාලිකා සොයන්න', onlineBtn:'🌐 සොයන්න',
+    tabAll:'🌐 සියල්ල', tabSi:'සිංහල', tabTa:'தமிழ்', tabEn:'English', tabMx:'මිශ්‍ර', tabFav:'⭐ ප්‍රියතම',
+    stopped:'නවත්වා ඇත', connecting:'සම්බන්ධ වෙමින්...', live:'🎵 සජීවී', errorSt:'දෝෂයකි',
+    retrying:'🔄 ආයෙත් සම්බන්ධ වෙමින්... ({0}/{1})', cantConnect:'සම්බන්ධ විය නොහැක',
+    emptyList:'නාලිකා හමු නොවිණි',
+    noUrl:'⚠️ Stream URL නැත',
+    httpWarn:'⚠️ HTTP stream — HTTPS site එකේ වැඩ නොකරන්න පුළුවන්',
+    httpFail:'❌ Stream විවෘත නොවේ. URL එක HTTPS එකකට වෙනස් කරන්න (✎)',
+    openFail:'❌ නාලිකාව විවෘත නොවේ', playFail:'❌ විවෘත නොවේ',
+    noSignal:'⚠️ සංඥාව නැත — ආයෙත් සම්බන්ධ වීමට උත්සාහ කරමින්',
+    giveUp:'❌ නැවත සම්බන්ධ විය නොහැක. ▶ එබුවා උත්සාහ කරන්න',
+    offlineToast:'📡 Internet නැත',
+    sleepDone:'😴 රේඩියෝ නතර කරන ලදී',
+    addTitle:'නාලිකාවක් එකතු කරන්න', editTitle:'නාලිකාව සංස්කරණය',
+    lName:'නම', lFreq:'සංඛ්‍යාතය (optional)', lUrl:'Stream URL', lGenre:'භාෂාව', lBitrate:'Bitrate kbps (optional)', lEmoji:'Emoji (optional)',
+    oSi:'සිංහල', oTa:'தமிழ்', oEn:'English', oMx:'මිශ්‍ර',
+    cancel:'අවලංගු', del:'මකන්න', save:'සුරකින්න', close:'වසන්න',
+    need:'නම සහ URL අවශ්‍යයි', badUrl:'URL එක http:// හෝ https:// වලින් පටන් ගන්න ඕනේ',
+    saved:'✅ සුරකින ලදී', removed:'🗑️ ඉවත් කරන ලදී', favFirst:'මුලින් list එකට එකතු කරන්න (＋)',
+    oTitle:'🌐 Online නාලිකා සොයන්න', oPh:'නම (හිස්ව තැබිය හැක)', oGo:'සොයන්න',
+    oLow:'📉 අඩු data (≤ 64 kbps පමණක්)',
+    oHint:'HTTPS streams පමණක්. ▶ එබුවාම ඇහෙනවා, ＋ එබුවාම list එකට එකතු වෙනවා.',
+    oInit:'"සොයන්න" එබුවාම ලංකාවේ stations පෙන්වයි',
+    searching:'සොයමින්...', noResults:'ප්‍රතිඵල නැහැ',
+    noLow:'64 kbps හෝ ඊට අඩු stations නැහැ.<br>"අඩු data" switch එක off කරන්න.',
+    netFail:'සම්බන්ධ විය නොහැක.<br>Internet පරීක්ෂා කර නැවත උත්සාහ කරන්න.',
+    cachedToast:'📦 සුරකින ලද ප්‍රතිඵල (data නොයයි)',
+    unknownBr:'bitrate නොදනී', perHour:'MB/පැය',
+    already:'දැනටමත් list එකේ තිබේ', added:'✅ එකතු කරන ලදී',
+    dTitle:'📊 Data භාවිතය', dToday:'අද', dWeek:'දින 7', dMonth:'මේ මාසය',
+    dNote:'ආසන්න අගයක් පමණයි — stream එකේ bitrate එක සහ ඇහුණ වේලාව අනුව ගණන් කරන ලදී. Bitrate නොදන්නා stations 128 kbps ලෙස සලකයි. මෙය ඔබේ ෆෝන් එකේ පමණක් සුරැකේ.',
+    dReset:'මකන්න', dConfirm:'Data ගණන සියල්ල මකන්නද?', dResetOk:'🗑️ Data ගණන මකා දමන ලදී'
+  },
+  en: {
+    searchPh:'🔍 Search stations', onlineBtn:'🌐 Find online',
+    tabAll:'🌐 All', tabSi:'Sinhala', tabTa:'Tamil', tabEn:'English', tabMx:'Mixed', tabFav:'⭐ Favorites',
+    stopped:'Stopped', connecting:'Connecting...', live:'🎵 Live', errorSt:'Error',
+    retrying:'🔄 Reconnecting... ({0}/{1})', cantConnect:'Cannot connect',
+    emptyList:'No stations found',
+    noUrl:'⚠️ No stream URL',
+    httpWarn:'⚠️ HTTP stream — may not work on an HTTPS site',
+    httpFail:"❌ Stream won't open. Change the URL to HTTPS (✎)",
+    openFail:"❌ Station won't open", playFail:'❌ Could not open',
+    noSignal:'⚠️ No signal — trying to reconnect',
+    giveUp:'❌ Could not reconnect. Tap ▶ to try again',
+    offlineToast:'📡 You are offline',
+    sleepDone:'😴 Radio stopped',
+    addTitle:'Add a station', editTitle:'Edit station',
+    lName:'Name', lFreq:'Frequency (optional)', lUrl:'Stream URL', lGenre:'Language', lBitrate:'Bitrate kbps (optional)', lEmoji:'Emoji (optional)',
+    oSi:'Sinhala', oTa:'Tamil', oEn:'English', oMx:'Mixed',
+    cancel:'Cancel', del:'Delete', save:'Save', close:'Close',
+    need:'Name and URL are required', badUrl:'URL must start with http:// or https://',
+    saved:'✅ Saved', removed:'🗑️ Removed', favFirst:'Add it to your list first (＋)',
+    oTitle:'🌐 Find stations online', oPh:'Name (optional)', oGo:'Search',
+    oLow:'📉 Low data (≤ 64 kbps only)',
+    oHint:'HTTPS streams only. Tap ▶ to listen and ＋ to add it to your list.',
+    oInit:'Tap "Search" to list Sri Lankan stations',
+    searching:'Searching...', noResults:'No results',
+    noLow:'No stations at 64 kbps or lower.<br>Turn off the "Low data" switch.',
+    netFail:'Could not connect.<br>Check your internet and try again.',
+    cachedToast:'📦 Saved results (no data used)',
+    unknownBr:'bitrate unknown', perHour:'MB/hr',
+    already:'Already in your list', added:'✅ Added',
+    dTitle:'📊 Data usage', dToday:'Today', dWeek:'Last 7 days', dMonth:'This month',
+    dNote:'Estimate only — based on stream bitrate and listening time. Stations with unknown bitrate are counted as 128 kbps. Stored on this phone only.',
+    dReset:'Reset', dConfirm:'Clear all usage data?', dResetOk:'🗑️ Usage cleared'
+  }
+};
+
+function load(k, d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch{return d}}
+function save(k, v){try{localStorage.setItem(k, JSON.stringify(v))}catch{}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+let lang = load(K_LANG, 'si');
+if(!I18N[lang]) lang = 'si';
+function t(k, ...a){
+  let s = (I18N[lang][k] != null ? I18N[lang][k] : (I18N.si[k] != null ? I18N.si[k] : k));
+  a.forEach((v,i)=>{ s = s.split('{'+i+'}').join(v) });
+  return s;
+}
 
 const DEFAULT_STATIONS = [
   {id:'hiru',   name:'Hiru FM',    freq:'96.1', emoji:'🎵', genre:'Sinhala', url:'https://radio.lotustechnologieslk.net:2020/stream/hirufmgalle'},
@@ -160,10 +277,6 @@ const DEFAULT_STATIONS = [
   {id:'city',   name:'City FM',    freq:'89.6', emoji:'🏙️', genre:'Mixed',   url:'http://220.247.227.20:8000/citystream'},
   {id:'rhythm', name:'Rhythm FM',  freq:'107.3',emoji:'🎶', genre:'Sinhala', url:'http://209.133.216.3:7148/stream'},
 ];
-
-function load(k, d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch{return d}}
-function save(k, v){try{localStorage.setItem(k, JSON.stringify(v))}catch{}}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 // stations load + migrate
 let stations = load(K_ST, null);
@@ -178,16 +291,111 @@ let favs = load(K_FAV, ['hiru']);
 let current = null, playing = false, baseVolume = 0.8;
 let sleepMin = 0, sleepTO = null, fadeIV = null;
 let filter = 'all', query = '';
+let editingId = null;
+
+// reconnect state
+const RETRY_DELAYS = [2000, 4000, 8000, 15000, 30000];
+let retryN = 0, retryTO = null, waitTO = null, userPaused = false, switching = false;
+
+// data usage state
+let segStart = null, segBps = 16000;
 
 const audio = $('audio');
 
 function isMixed(url){return location.protocol==='https:' && /^http:\/\//i.test(url)}
-function toast(msg, ms=3000){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)}
+function toast(msg, ms=3000){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms)}
 
+// ===== Data usage counter =====
+function dayKey(d){
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function addData(bytes){
+  if(!(bytes>0)) return;
+  const d = load(K_DATA, {}), k = dayKey();
+  d[k] = (d[k]||0) + bytes;
+  const keys = Object.keys(d).sort();
+  while(keys.length>40) delete d[keys.shift()];
+  save(K_DATA, d);
+}
+function flushData(end){
+  if(segStart==null) return;
+  const now = Date.now();
+  const sec = Math.min((now-segStart)/1000, 300);
+  addData(sec*segBps);
+  segStart = end ? null : now;
+}
+function fmtBytes(b){
+  if(b < 1048576) return Math.max(0,Math.round(b/1024))+' KB';
+  if(b < 1073741824) return (b/1048576).toFixed(b<10485760?1:0)+' MB';
+  return (b/1073741824).toFixed(2)+' GB';
+}
+function renderData(){
+  const d = load(K_DATA, {});
+  const now = new Date(), today = dayKey(now);
+  const days = [];
+  for(let i=6;i>=0;i--){const x=new Date(now);x.setDate(x.getDate()-i);days.push(dayKey(x))}
+  const vals = days.map(k=>d[k]||0);
+  const max = Math.max(...vals, 1);
+  const week = vals.reduce((a,b)=>a+b,0);
+  const ym = today.slice(0,7);
+  const month = Object.keys(d).filter(k=>k.startsWith(ym)).reduce((a,k)=>a+d[k],0);
+  $('dSum').innerHTML =
+    `<div class="dbox"><b>${fmtBytes(d[today]||0)}</b><span>${t('dToday')}</span></div>`+
+    `<div class="dbox"><b>${fmtBytes(week)}</b><span>${t('dWeek')}</span></div>`+
+    `<div class="dbox"><b>${fmtBytes(month)}</b><span>${t('dMonth')}</span></div>`;
+  $('dBars').innerHTML = days.map((k,i)=>
+    `<div class="drow"><span class="dl">${k===today?t('dToday'):k.slice(5)}</span><div class="dbar"><i style="width:${Math.round(vals[i]/max*100)}%"></i></div><span class="dv">${fmtBytes(vals[i])}</span></div>`
+  ).join('');
+}
+
+// ===== Auto-reconnect =====
+function clearRetry(){ clearTimeout(retryTO); retryTO = null }
+function clearWait(){ clearTimeout(waitTO); waitTO = null }
+
+function scheduleRetry(){
+  if(!current || userPaused || isMixed(current.url)) return;
+  if(retryTO) return;
+  if(retryN >= RETRY_DELAYS.length){
+    retryN = 0;
+    $('pStatus').textContent = t('cantConnect');
+    toast(t('giveUp'), 4000);
+    return;
+  }
+  const delay = RETRY_DELAYS[retryN++];
+  $('pStatus').textContent = t('retrying', retryN, RETRY_DELAYS.length);
+  retryTO = setTimeout(()=>{
+    retryTO = null;
+    if(!current || userPaused) return;
+    audio.src = current.url;
+    audio.load();
+    audio.play().catch(onPlayReject);
+  }, delay);
+}
+
+function onPlayReject(err){
+  console.warn(err);
+  if(err && err.name==='AbortError') return;      // අලුත් load එකකින් නතර වුණා
+  playing = false; updateUI();
+  if(err && err.name==='NotAllowedError'){
+    $('pStatus').textContent = t('stopped');
+    toast(t('playFail'));
+    return;
+  }
+  if(current && isMixed(current.url)){
+    $('pStatus').textContent = t('errorSt');
+    toast(t('httpFail'));
+    return;
+  }
+  if(retryN===0) toast(t('openFail'));
+  scheduleRetry();
+}
+
+// ===== UI render =====
 function renderTabs(){
   const genres = ['all','Sinhala','Tamil','English','Mixed','fav'];
-  const labels = {all:'🌐 All',Sinhala:'සිංහල',Tamil:'தமிழ்',English:'English',Mixed:'Mixed',fav:'⭐ Favorites'};
-  $('tabs').innerHTML = genres.map(g=>`<button class="tab ${filter===g?'active':''}" data-g="${g}">${labels[g]}</button>`).join('');
+  const keys = {all:'tabAll',Sinhala:'tabSi',Tamil:'tabTa',English:'tabEn',Mixed:'tabMx',fav:'tabFav'};
+  $('tabs').innerHTML = genres.map(g=>`<button class="tab ${filter===g?'active':''}" data-g="${g}">${t(keys[g])}</button>`).join('');
   $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{filter=b.dataset.g;renderTabs();renderList()});
 }
 
@@ -202,11 +410,11 @@ function filtered(){
 
 function renderList(){
   const list = filtered();
-  if(!list.length){$('list').innerHTML='<div class="empty">නාලිකා හමු නොවිණි</div>';return}
+  if(!list.length){$('list').innerHTML=`<div class="empty">${t('emptyList')}</div>`;return}
   $('list').innerHTML = list.map(s=>`
     <div class="station ${current&&current.id===s.id?'playing':''}" data-id="${esc(s.id)}">
       <div class="icon">${esc(s.emoji||'📻')}</div>
-      <div class="info"><div class="name">${esc(s.name)}</div><div class="meta">${s.freq?esc(s.freq)+' FM · ':''}${esc(s.genre||'')}${isMixed(s.url)?' · <span class="warn">⚠ HTTP</span>':''}</div></div>
+      <div class="info"><div class="name">${esc(s.name)}</div><div class="meta">${s.freq?esc(s.freq)+' FM · ':''}${esc(s.genre||'')}${s.bitrate?' · '+esc(s.bitrate)+'k':''}${isMixed(s.url)?' · <span class="warn">⚠ HTTP</span>':''}</div></div>
       <button class="star ${favs.includes(s.id)?'on':''}" data-fav="${esc(s.id)}" aria-label="Favorite">${favs.includes(s.id)?'★':'☆'}</button>
       <button class="menu" data-edit="${esc(s.id)}" aria-label="Edit">✎</button>
     </div>`).join('');
@@ -221,7 +429,7 @@ function renderList(){
 }
 
 function toggleFav(id){
-  if(id==='tmp_preview'){toast('මුලින් list එකට එකතු කරන්න (＋)');return}
+  if(id==='tmp_preview'){toast(t('favFirst'));return}
   if(favs.includes(id)) favs = favs.filter(x=>x!==id); else favs.push(id);
   save(K_FAV, favs); renderList();
   if(current && current.id===id) $('pStar').textContent = favs.includes(id)?'★':'☆';
@@ -229,21 +437,18 @@ function toggleFav(id){
 
 function playStation(s){
   if(!s) return;
-  if(!s.url){toast('⚠️ Stream URL නැත');return}
-  if(isMixed(s.url)) toast('⚠️ HTTP stream — HTTPS site එකේ වැඩ නොකරන්න පුළුවන්',4000);
+  if(!s.url){toast(t('noUrl'));return}
+  if(isMixed(s.url)) toast(t('httpWarn'),4000);
+  flushData(true);
+  clearRetry(); clearWait(); retryN = 0; userPaused = false;
   if(fadeIV){clearInterval(fadeIV);fadeIV=null}
+  switching = true; setTimeout(()=>{switching=false}, 400);
   current = s;
   audio.pause();
   audio.src = s.url;
   audio.volume = baseVolume;
-  $('pStatus').textContent = 'සම්බන්ධ වෙමින්...';
-  audio.play().catch(err=>{
-    console.warn(err);
-    if(isMixed(s.url)) toast('❌ Stream විවෘත නොවේ. URL එක HTTPS එකකට වෙනස් කරන්න (✎)');
-    else toast('❌ නාලිකාව විවෘත නොවේ');
-    $('pStatus').textContent = 'නවත්වා ඇත';
-    playing = false; updateUI();
-  });
+  $('pStatus').textContent = t('connecting');
+  audio.play().catch(onPlayReject);
   $('player').classList.add('show');
   $('pName').textContent = s.name;
   $('pIcon').textContent = s.emoji || '📻';
@@ -254,18 +459,61 @@ function playStation(s){
 
 function updateUI(){
   $('pPlay').textContent = playing ? '❚❚' : '▶';
-  if(playing) $('pStatus').textContent = '🎵 සජීවී';
+  if(playing) $('pStatus').textContent = t('live');
 }
 
-audio.addEventListener('playing', ()=>{playing=true;updateUI()});
-audio.addEventListener('pause', ()=>{playing=false;if(!fadeIV) $('pStatus').textContent='නවත්වා ඇත';updateUI()});
-audio.addEventListener('waiting', ()=>{if(current) $('pStatus').textContent='සම්බන්ධ වෙමින්...'});
-audio.addEventListener('error', ()=>{
-  if(!current) return;
-  playing=false;updateUI();
-  $('pStatus').textContent='දෝෂයකි';
-  toast('⚠️ සංඥාව නැත — වෙනත් එකක් උත්සාහ කරන්න');
+audio.addEventListener('playing', ()=>{
+  playing = true; retryN = 0; clearRetry(); clearWait(); switching = false;
+  if(segStart==null){ segStart = Date.now(); segBps = ((current && current.bitrate) || 128) * 125 }
+  updateUI();
 });
+audio.addEventListener('pause', ()=>{
+  flushData(true); clearWait();
+  playing = false;
+  if(!fadeIV && !retryTO && !switching) $('pStatus').textContent = t('stopped');
+  updateUI();
+});
+audio.addEventListener('waiting', ()=>{
+  if(!current) return;
+  $('pStatus').textContent = t('connecting');
+  clearWait();
+  // තත්පර 15ක් ගිහින් ඉතිරි වුණොත් (data නැතුව හිරවුණොත්) ආයෙත් සම්බන්ධ වෙනවා
+  waitTO = setTimeout(()=>{
+    waitTO = null;
+    if(current && !userPaused && !audio.paused && audio.readyState < 3){
+      flushData(true); playing = false; updateUI();
+      scheduleRetry();
+    }
+  }, 15000);
+});
+audio.addEventListener('error', ()=>{
+  if(!current || !audio.getAttribute('src')) return;
+  flushData(true);
+  playing = false; updateUI();
+  if(isMixed(current.url)){
+    $('pStatus').textContent = t('errorSt');
+    toast(t('httpFail'));
+    return;
+  }
+  if(retryN===0) toast(t('noSignal'));
+  scheduleRetry();
+});
+audio.addEventListener('ended', ()=>{
+  if(!current || userPaused) return;
+  flushData(true); playing = false; updateUI();
+  scheduleRetry();
+});
+
+window.addEventListener('online', ()=>{
+  if(current && !userPaused && !playing && !isMixed(current.url)){
+    clearRetry(); retryN = 0;
+    $('pStatus').textContent = t('connecting');
+    audio.src = current.url; audio.load();
+    audio.play().catch(onPlayReject);
+  }
+});
+window.addEventListener('offline', ()=>{ if(current && playing) toast(t('offlineToast')) });
+document.addEventListener('visibilitychange', ()=>flushData(false));
 
 function updateMediaSession(s){
   if(!('mediaSession' in navigator)) return;
@@ -277,13 +525,15 @@ function updateMediaSession(s){
         {src:'icon-512.png', sizes:'512x512', type:'image/png'}
       ]
     });
-    navigator.mediaSession.setActionHandler('play', ()=>audio.play());
-    navigator.mediaSession.setActionHandler('pause', ()=>audio.pause());
+    navigator.mediaSession.setActionHandler('play', ()=>{ userPaused=false; audio.play().catch(onPlayReject) });
+    navigator.mediaSession.setActionHandler('pause', ()=>{ userPaused=true; clearRetry(); audio.pause() });
     navigator.mediaSession.setActionHandler('stop', ()=>stopAll());
   }catch(e){}
 }
 
 function stopAll(){
+  flushData(true);
+  clearRetry(); clearWait(); retryN = 0; userPaused = true;
   if(fadeIV){clearInterval(fadeIV);fadeIV=null}
   audio.pause();
   current=null;playing=false;
@@ -311,9 +561,10 @@ function setSleep(min){
       const v = startVol*(1-p);
       if(v<=0){
         clearInterval(fadeIV);fadeIV=null;
+        userPaused = true; clearRetry();
         audio.pause();audio.volume=baseVolume;
         sleepMin = 0; resetSleepUI();
-        toast('😴 රේඩියෝ නතර කරන ලදී');
+        toast(t('sleepDone'));
       } else { audio.volume = v; }
     }, 200);
   }, min*60*1000);
@@ -327,10 +578,14 @@ $('timerBtn').onclick = ()=>{
 
 $('pPlay').onclick = ()=>{
   if(!current) return;
-  if(playing) audio.pause();
-  else {
-    if(!audio.getAttribute('src')) audio.src = current.url;
-    audio.play().catch(()=>toast('❌ විවෘත නොවේ'));
+  if(playing){
+    userPaused = true; clearRetry(); clearWait();
+    audio.pause();
+  } else {
+    userPaused = false; retryN = 0; clearRetry();
+    if(!audio.getAttribute('src') || audio.error){ audio.src = current.url; audio.load() }
+    $('pStatus').textContent = t('connecting');
+    audio.play().catch(onPlayReject);
   }
 };
 $('pClose').onclick = stopAll;
@@ -339,17 +594,17 @@ $('pStar').onclick = ()=>{ if(current) toggleFav(current.id) };
 $('vol').oninput = e=>{baseVolume = e.target.value/100; if(!fadeIV) audio.volume = baseVolume};
 $('search').oninput = e=>{query = e.target.value.trim(); renderList()};
 
-// Add / Edit modal
-let editingId = null;
+// ===== Add / Edit modal =====
 function openAdd(){
-  editingId=null;$('modalTitle').textContent='නාලිකාවක් එකතු කරන්න';
-  $('fName').value='';$('fFreq').value='';$('fUrl').value='';$('fEmoji').value='';$('fGenre').value='Sinhala';
+  editingId=null;$('modalTitle').textContent=t('addTitle');
+  $('fName').value='';$('fFreq').value='';$('fUrl').value='';$('fEmoji').value='';$('fBitrate').value='';$('fGenre').value='Sinhala';
   $('deleteBtn').style.display='none';$('modal').classList.add('show');
 }
 function openEdit(id){
   const s=stations.find(x=>x.id===id);if(!s)return;
-  editingId=id;$('modalTitle').textContent='නාලිකාව සංස්කරණය';
-  $('fName').value=s.name;$('fFreq').value=s.freq||'';$('fUrl').value=s.url;$('fEmoji').value=s.emoji||'';$('fGenre').value=s.genre||'Sinhala';
+  editingId=id;$('modalTitle').textContent=t('editTitle');
+  $('fName').value=s.name;$('fFreq').value=s.freq||'';$('fUrl').value=s.url;$('fEmoji').value=s.emoji||'';
+  $('fBitrate').value=s.bitrate||'';$('fGenre').value=s.genre||'Sinhala';
   $('deleteBtn').style.display='block';$('modal').classList.add('show');
 }
 $('fab').onclick = openAdd;
@@ -358,9 +613,9 @@ $('modal').onclick = e=>{ if(e.target===$('modal')) $('modal').classList.remove(
 $('saveBtn').onclick = ()=>{
   const name = $('fName').value.trim();
   const url = $('fUrl').value.trim();
-  if(!name || !url){toast('නම සහ URL අවශ්‍යයි');return}
-  if(!/^https?:\/\//i.test(url)){toast('URL එක http:// හෝ https:// වලින් පටන් ගන්න ඕනේ');return}
-  const obj = {name, url, freq:$('fFreq').value.trim(), emoji:$('fEmoji').value.trim()||'📻', genre:$('fGenre').value};
+  if(!name || !url){toast(t('need'));return}
+  if(!/^https?:\/\//i.test(url)){toast(t('badUrl'));return}
+  const obj = {name, url, freq:$('fFreq').value.trim(), emoji:$('fEmoji').value.trim()||'📻', genre:$('fGenre').value, bitrate:parseInt($('fBitrate').value)||0};
   if(editingId){
     const i = stations.findIndex(x=>x.id===editingId);
     stations[i] = {...stations[i], ...obj};
@@ -373,7 +628,7 @@ $('saveBtn').onclick = ()=>{
   } else {
     obj.id = 'u_'+Date.now(); stations.push(obj);
   }
-  save(K_ST, stations); $('modal').classList.remove('show'); renderList(); toast('✅ සුරකින ලදී');
+  save(K_ST, stations); $('modal').classList.remove('show'); renderList(); toast(t('saved'));
 };
 $('deleteBtn').onclick = ()=>{
   if(!editingId) return;
@@ -381,17 +636,16 @@ $('deleteBtn').onclick = ()=>{
   favs = favs.filter(x=>x!==editingId);
   save(K_ST, stations); save(K_FAV, favs);
   if(current && current.id===editingId) stopAll();
-  $('modal').classList.remove('show'); renderList(); toast('🗑️ ඉවත් කරන ලදී');
+  $('modal').classList.remove('show'); renderList(); toast(t('removed'));
 };
 
 // ===== Online search (Radio Browser) =====
-const K_CACHE = 'slradio_cache_v1', K_LOW = 'slradio_low';
 const CACHE_TTL = 6*3600*1000;
 const API_HOSTS = ['https://de1.api.radio-browser.info','https://fi1.api.radio-browser.info','https://nl1.api.radio-browser.info'];
 let onlineResults = [], shown = [];
 
-function guessGenre(lang){
-  const l=(lang||'').toLowerCase();
+function guessGenre(l){
+  l = (l||'').toLowerCase();
   if(l.includes('sinhal')) return 'Sinhala';
   if(l.includes('tamil')) return 'Tamil';
   if(l.includes('english')) return 'English';
@@ -435,15 +689,13 @@ function renderOnline(){
   shown = list;
   const box = $('oList');
   if(!list.length){
-    box.innerHTML = (low && onlineResults.length)
-      ? '<div class="empty">64 kbps හෝ ඊට අඩු stations නැහැ.<br>"අඩු data" switch එක off කරන්න.</div>'
-      : '<div class="empty">ප්‍රතිඵල නැහැ</div>';
+    box.innerHTML = `<div class="empty">${(low && onlineResults.length) ? t('noLow') : t('noResults')}</div>`;
     return;
   }
   box.innerHTML = list.map((s,i)=>{
     const added = stations.some(x=>x.url===s.url);
     const playingNow = current && current.url===s.url;
-    const br = s.bitrate ? `${s.bitrate} kbps · ≈${Math.max(1,Math.round(s.bitrate*0.45))} MB/පැය` : 'bitrate නොදනී';
+    const br = s.bitrate ? `${s.bitrate} kbps · ≈${Math.max(1,Math.round(s.bitrate*0.45))} ${t('perHour')}` : t('unknownBr');
     return `<div class="orow ${playingNow?'playing':''}">
       <div class="info"><div class="name">${esc(s.name)}</div><div class="meta">${br}${s.codec?' · '+esc(s.codec):''}</div></div>
       <button class="obtn" data-p="${i}">${playingNow&&playing?'❚❚':'▶'}</button>
@@ -456,29 +708,29 @@ function renderOnline(){
 
 function previewOnline(s){
   if(!s) return;
-  if(current && current.url===s.url && playing){ audio.pause(); return }
-  playStation({id:'tmp_preview', name:s.name, url:s.url, emoji:'📻', genre:guessGenre(s.lang), freq:''});
+  if(current && current.url===s.url && playing){ userPaused = true; clearRetry(); audio.pause(); return }
+  playStation({id:'tmp_preview', name:s.name, url:s.url, emoji:'📻', genre:guessGenre(s.lang), freq:'', bitrate:s.bitrate});
   renderOnline();
 }
 
 function addOnline(s){
   if(!s) return;
-  if(stations.some(x=>x.url===s.url)){toast('දැනටමත් list එකේ තිබේ');return}
-  const st = {id:'u_'+Date.now(), name:s.name, url:s.url, freq:'', emoji:'📻', genre:guessGenre(s.lang)};
+  if(stations.some(x=>x.url===s.url)){toast(t('already'));return}
+  const st = {id:'u_'+Date.now(), name:s.name, url:s.url, freq:'', emoji:'📻', genre:guessGenre(s.lang), bitrate:s.bitrate};
   stations.push(st); save(K_ST, stations);
   if(current && current.url===st.url){ current = st; $('pStar').textContent = favs.includes(st.id)?'★':'☆' }
-  renderList(); renderOnline(); toast('✅ එකතු කරන ලදී');
+  renderList(); renderOnline(); toast(t('added'));
 }
 
 async function doSearch(){
   const q = $('oQuery').value.trim();
-  $('oList').innerHTML = '<div class="empty">සොයමින්...</div>';
+  $('oList').innerHTML = `<div class="empty">${t('searching')}</div>`;
   try{
     const {list, cached} = await fetchStations(q);
     onlineResults = list; renderOnline();
-    if(cached) toast('📦 සුරකින ලද ප්‍රතිඵල (data නොයයි)');
+    if(cached) toast(t('cachedToast'));
   }catch(e){
-    $('oList').innerHTML = '<div class="empty">සම්බන්ධ විය නොහැක.<br>Internet පරීක්ෂා කර නැවත උත්සාහ කරන්න.</div>';
+    $('oList').innerHTML = `<div class="empty">${t('netFail')}</div>`;
   }
 }
 
@@ -491,8 +743,41 @@ $('oLow').checked = load(K_LOW, false);
 $('oLow').onchange = ()=>{ save(K_LOW, $('oLow').checked); renderOnline() };
 ['playing','pause'].forEach(ev=>audio.addEventListener(ev, ()=>{ if($('omodal').classList.contains('show') && onlineResults.length) renderOnline() }));
 
+// ===== Data modal =====
+$('dataBtn').onclick = ()=>{ flushData(false); renderData(); $('dmodal').classList.add('show') };
+$('dClose').onclick = ()=>$('dmodal').classList.remove('show');
+$('dmodal').onclick = e=>{ if(e.target===$('dmodal')) $('dmodal').classList.remove('show') };
+$('dReset').onclick = ()=>{
+  if(!confirm(t('dConfirm'))) return;
+  save(K_DATA, {}); renderData(); toast(t('dResetOk'));
+};
+setInterval(()=>{
+  if(playing) flushData(false);
+  if($('dmodal').classList.contains('show')){ flushData(false); renderData() }
+}, 10000);
+
+// ===== Language switch =====
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')) });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.getAttribute('data-i18n-ph')) });
+  $('langBtn').textContent = lang==='si' ? 'EN' : 'සි';
+  $('modalTitle').textContent = t(editingId ? 'editTitle' : 'addTitle');
+  if(!current) $('pStatus').textContent = t('stopped');
+  else if(playing) $('pStatus').textContent = t('live');
+  else if(!retryTO && audio.paused) $('pStatus').textContent = t('stopped');
+  renderTabs(); renderList();
+  if(onlineResults.length) renderOnline();
+  if($('dmodal').classList.contains('show')) renderData();
+}
+$('langBtn').onclick = ()=>{
+  lang = (lang==='si') ? 'en' : 'si';
+  save(K_LANG, lang);
+  applyLang();
+};
+
 // Init
-renderTabs(); renderList();
+applyLang();
 
 // PWA service worker
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
